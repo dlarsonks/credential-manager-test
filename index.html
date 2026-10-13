@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Password Credential Test</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --page: #f4f6fa;
+      --panel: #fff;
+      --text: #172033;
+      --muted: #596579;
+      --border: #d7dce5;
+      --accent: #2458c6;
+      --accent-hover: #1948a9;
+      --notice: #fff6db;
+      --notice-border: #e6c45f;
+      --log: #101827;
+      --log-text: #e8edf7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #111722;
+        --panel: #1a2331;
+        --text: #edf2fb;
+        --muted: #aab5c6;
+        --border: #3a4658;
+        --accent: #82aaff;
+        --accent-hover: #a3c0ff;
+        --notice: #332d1d;
+        --notice-border: #8c7432;
+        --log: #0b1019;
+        --log-text: #e8edf7;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 2rem 1rem; background: var(--page); color: var(--text); }
+    main { width: min(760px, 100%); margin: 0 auto; }
+    h1 { margin: 0 0 .35rem; font-size: clamp(1.7rem, 5vw, 2.25rem); line-height: 1.2; }
+    h2 { margin: 0 0 1rem; font-size: 1.2rem; }
+    p { margin: .5rem 0 1rem; }
+    .intro, .panel { margin: 1.25rem 0; }
+    .panel { padding: 1.25rem; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
+    .notice { padding: 1rem; border: 1px solid var(--notice-border); border-radius: 10px; background: var(--notice); }
+    .notice strong { display: block; margin-bottom: .25rem; }
+    .muted { color: var(--muted); }
+    .status-grid { display: grid; grid-template-columns: minmax(150px, 1fr) 2fr; gap: .55rem 1rem; margin: 0; }
+    .status-grid dt { color: var(--muted); }
+    .status-grid dd { margin: 0; overflow-wrap: anywhere; }
+    .supported { color: #17824b; }
+    .unsupported { color: #c13d35; }
+    label { display: block; margin: .9rem 0 .3rem; font-weight: 600; }
+    input { width: 100%; padding: .7rem .75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); font: inherit; }
+    input:focus-visible, button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
+    .hint { margin: .35rem 0 0; color: var(--muted); font-size: .9rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.15rem; }
+    button { padding: .7rem 1rem; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: #fff; font: inherit; font-weight: 650; cursor: pointer; }
+    @media (prefers-color-scheme: dark) { button { color: #101827; } }
+    button:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    button.secondary { background: transparent; color: var(--accent); }
+    button.secondary:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    #log { max-height: 300px; min-height: 90px; overflow: auto; margin: 0; padding: .8rem; border-radius: 8px; background: var(--log); color: var(--log-text); white-space: pre-wrap; overflow-wrap: anywhere; font: .86rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code { font-size: .95em; }
+    @media (max-width: 520px) {
+      body { padding: 1.25rem .75rem; }
+      .status-grid { grid-template-columns: 1fr; gap: .15rem; }
+      .status-grid dd { margin: 0 0 .55rem; }
+      button { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="intro">
+      <h1>Password Credential Test</h1>
+      <p class="muted">A small, local-only page for trying the browser Credential Management API with a <code>PasswordCredential</code>.</p>
+    </header>
+
+    <section class="notice" aria-label="Testing and privacy notice">
+      <strong>Use test-only values.</strong>
+      Clicking “Store” may save the entered password in this browser’s password manager for this site. This page makes no network requests and never prints the password to the log. A web page cannot delete a saved password credential; remove it in the browser’s password manager if needed.
+    </section>
+
+    <section class="panel" aria-labelledby="support-heading">
+      <h2 id="support-heading">Environment</h2>
+      <dl class="status-grid">
+        <dt>Secure context</dt><dd id="secure-status">Checking…</dd>
+        <dt><code>PasswordCredential</code></dt><dd id="password-status">Checking…</dd>
+        <dt><code>navigator.credentials</code></dt><dd id="credentials-status">Checking…</dd>
+        <dt>Current origin</dt><dd id="origin-status">Checking…</dd>
+      </dl>
+      <p class="hint">Support varies by browser and platform. For consistent testing, open this page from the same HTTPS or localhost origin each time; credentials are scoped to an origin.</p>
+      <div class="actions">
+        <button class="secondary" id="check-button" type="button">Check support</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="credential-heading">
+      <h2 id="credential-heading">Test credential</h2>
+      <form id="credential-form" autocomplete="on">
+        <label for="credential-id">Username / ID</label>
+        <input id="credential-id" name="username" type="text" autocomplete="username" value="testuser@example.com">
+
+        <label for="credential-password">Password</label>
+        <input id="credential-password" name="password" type="password" autocomplete="current-password" value="TestOnlyPassword123!">
+        <p class="hint">This is a dummy example value. Replace it only with another test value.</p>
+
+        <label for="credential-name">Display name (optional)</label>
+        <input id="credential-name" name="name" type="text" autocomplete="name" value="Test User">
+
+        <div class="actions">
+          <button id="store-button" type="button">Store test credential</button>
+          <button id="get-button" class="secondary" type="button">Retrieve saved credential</button>
+          <button id="clear-button" class="secondary" type="button">Clear page fields</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="log-heading">
+      <h2 id="log-heading">Activity</h2>
+      <pre id="log" role="log" aria-live="polite">Ready. Check support, then store or retrieve a test credential.</pre>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const byId = (id) => document.getElementById(id);
+    const logElement = byId("log");
+
+    function log(message, level = "info") {
+      const time = new Date().toLocaleTimeString();
+      const line = `[${time}] ${message}`;
+      logElement.textContent = logElement.textContent === "Ready. Check support, then store or retrieve a test credential."
+        ? line
+        : `${logElement.textContent}\n${line}`;
+      logElement.scrollTop = logElement.scrollHeight;
+      if (level === "error") console.error(message);
+      else console.log(message);
+    }
+
+    function setStatus(id, supported, text) {
+      const element = byId(id);
+      element.textContent = text;
+      element.className = supported ? "supported" : "unsupported";
+    }
+
+    function checkSupport() {
+      const secure = window.isSecureContext === true;
+      const hasPasswordCredential = typeof window.PasswordCredential === "function";
+      const hasCredentials = Boolean(navigator.credentials);
+      const hasStore = hasCredentials && typeof navigator.credentials.store === "function";
+      const hasGet = hasCredentials && typeof navigator.credentials.get === "function";
+
+      setStatus("secure-status", secure, secure ? "Yes" : "No — use HTTPS or localhost for testing");
+      setStatus("password-status", hasPasswordCredential, hasPasswordCredential ? "Supported" : "Not supported here");
+      setStatus("credentials-status", hasCredentials && hasStore && hasGet,
+        !hasCredentials ? "Not available" : `store(): ${hasStore ? "available" : "unavailable"}; get(): ${hasGet ? "available" : "unavailable"}`);
+      byId("origin-status").textContent = location.origin;
+
+      const usable = secure && hasPasswordCredential && hasStore && hasGet;
+      byId("store-button").disabled = !usable;
+      byId("get-button").disabled = !usable;
+      return usable;
+    }
+
+    function getTestValues() {
+      const id = byId("credential-id").value.trim();
+      const password = byId("credential-password").value;
+      const name = byId("credential-name").value.trim();
+      if (!id) throw new Error("Enter a username or ID first.");
+      if (!password) throw new Error("Enter a test password first.");
+      return { id, password, name };
+    }
+
+    byId("check-button").addEventListener("click", () => {
+      const usable = checkSupport();
+      log(usable ? "Required APIs are available in a secure context." : "One or more requirements are missing; see Environment above.");
+    });
+
+    byId("store-button").addEventListener("click", async () => {
+      if (!checkSupport()) {
+        log("Cannot store: the API is unavailable or this is not a secure context.", "error");
+        return;
+      }
+      try {
+        const values = getTestValues();
+        const credential = new PasswordCredential({
+          id: values.id,
+          password: values.password,
+          ...(values.name ? { name: values.name } : {})
+        });
+        await navigator.credentials.store(credential);
+        log(`store() resolved for “${values.id}”. Check for a browser save prompt or entry.`);
+      } catch (error) {
+        log(`Store failed: ${error.name || "Error"}${error.message ? ` — ${error.message}` : ""}`, "error");
+      }
+    });
+
+    byId("get-button").addEventListener("click", async () => {
+      if (!checkSupport()) {
+        log("Cannot retrieve: the API is unavailable or this is not a secure context.", "error");
+        return;
+      }
+      try {
+        // Required mediation asks the browser to let the user choose a saved credential.
+        const credential = await navigator.credentials.get({ password: true, mediation: "required" });
+        if (!credential) {
+          log("No credential was returned. The browser may have no saved entry for this origin.");
+          return;
+        }
+        byId("credential-id").value = credential.id || "";
+        byId("credential-name").value = credential.name || "";
+        if (typeof credential.password === "string") {
+          byId("credential-password").value = credential.password;
+          log(`Retrieved a password credential for “${credential.id || "(no ID)"}”. The password was placed in the masked field.`);
+        } else {
+          log(`Received a credential for “${credential.id || "(no ID)"}”, but it has no password property.`);
+        }
+      } catch (error) {
+        log(`Retrieval failed or was cancelled: ${error.name || "Error"}${error.message ? ` — ${error.message}` : ""}`, "error");
+      }
+    });
+
+    byId("clear-button").addEventListener("click", () => {
+      byId("credential-id").value = "";
+      byId("credential-password").value = "";
+      byId("credential-name").value = "";
+      log("Cleared the page fields. This does not delete anything from the browser password manager.");
+    });
+
+    checkSupport();
+  </script>
+</body>
+</html>
