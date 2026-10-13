@@ -54,6 +54,10 @@
     .unsupported { color: #c13d35; }
     label { display: block; margin: .9rem 0 .3rem; font-weight: 600; }
     input { width: 100%; padding: .7rem .75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text); font: inherit; }
+    .password-control { display: flex; align-items: stretch; gap: .5rem; }
+    .password-control input { flex: 1; min-width: 0; }
+    button.password-toggle { flex: 0 0 auto; min-width: 5rem; background: transparent; border-color: var(--border); color: var(--accent); }
+    button.password-toggle:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: var(--accent); }
     input:focus-visible, button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
     .hint { margin: .35rem 0 0; color: var(--muted); font-size: .9rem; }
     .actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.15rem; }
@@ -70,6 +74,7 @@
       .status-grid { grid-template-columns: 1fr; gap: .15rem; }
       .status-grid dd { margin: 0 0 .55rem; }
       button { flex: 1 1 100%; }
+      button.password-toggle { flex: 0 0 auto; }
     }
   </style>
 </head>
@@ -106,7 +111,10 @@
         <input id="credential-id" name="username" type="text" autocomplete="username" value="testuser@example.com">
 
         <label for="credential-password">Password</label>
-        <input id="credential-password" name="password" type="password" autocomplete="current-password" value="TestOnlyPassword123!">
+        <div class="password-control">
+          <input id="credential-password" name="password" type="password" autocomplete="current-password" value="TestOnlyPassword123!">
+          <button id="toggle-password" class="password-toggle" type="button" aria-controls="credential-password" aria-label="Show password">Show</button>
+        </div>
         <p class="hint">This is a dummy example value. Replace it only with another test value.</p>
 
         <label for="credential-name">Display name (optional)</label>
@@ -131,6 +139,18 @@
 
     const byId = (id) => document.getElementById(id);
     const logElement = byId("log");
+    const passwordInput = byId("credential-password");
+    const passwordToggle = byId("toggle-password");
+
+    function setPasswordVisible(visible) {
+      passwordInput.type = visible ? "text" : "password";
+      passwordToggle.textContent = visible ? "Hide" : "Show";
+      passwordToggle.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+    }
+
+    passwordToggle.addEventListener("click", () => {
+      setPasswordVisible(passwordInput.type === "password");
+    });
 
     function log(message, level = "info") {
       const time = new Date().toLocaleTimeString();
@@ -228,7 +248,8 @@
 
     byId("clear-button").addEventListener("click", () => {
       byId("credential-id").value = "";
-      byId("credential-password").value = "";
+      passwordInput.value = "";
+      setPasswordVisible(false);
       byId("credential-name").value = "";
       log("Cleared the page fields. This does not delete anything from the browser password manager.");
     });
